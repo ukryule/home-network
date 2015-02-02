@@ -28,17 +28,19 @@ class MainPage(webapp2.RequestHandler):
         greetings_query = Greeting.query(ancestor=guestbook_key()).order(-Greeting.date)
         greetings = greetings_query.fetch(10)
 
+        template = jinja_environment.get_template('index.html')
         if users.get_current_user():
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
+            url_linktext = 'Logout ' + users.get_current_user().nickname()
+            self.response.out.write(template.render(greetings=greetings,
+                                                    url=url,
+                                                    url_linktext=url_linktext))
         else:
             url = users.create_login_url(self.request.uri)
             url_linktext = 'Login'
+            self.response.out.write(template.render(url=url,
+                                                    url_linktext=url_linktext))
 
-        template = jinja_environment.get_template('index.html')
-        self.response.out.write(template.render(greetings=greetings,
-                                                url=url,
-                                                url_linktext=url_linktext))
 
 class Guestbook(webapp2.RequestHandler):
     def post(self):
