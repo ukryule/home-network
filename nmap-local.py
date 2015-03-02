@@ -1,5 +1,6 @@
 #!/usr/bin/python 
 import argparse
+import csv
 import nmap
 import sys
 
@@ -10,48 +11,20 @@ def scanHosts(hosts, args):
   nm = nmap.PortScanner()
   return nm.scan(hosts=hosts, arguments=args)
 
-def deviceNames():
-  names = {
-    '78:CD:8E:6C:F5:4A': 'Main modem/router',
-    'C4:3D:C7:A3:FF:14': 'Netgear WiFi',
-    'C8:CB:B8:C5:2F:35': 'Home Server (HP)',
-    'C0:3F:0E:AF:3A:3D': 'Nas',
-    'C8:2A:14:0A:93:04': 'Mac Mini',
-    '00:24:1E:C7:2E:8B': 'Wii',
-    '40:F0:2F:59:9E:5B': 'Chromebook (Work)',
-    '20:0C:C8:47:2B:59': 'Powerline #1',
-    'F8:8F:CA:12:49:A4': 'Google Glass',
-    '74:DA:38:0E:2A:40': 'Raspberry Pi',
-    '70:62:B8:AC:92:D2': 'Garage powerplug',
-    'A0:B3:CC:06:61:FC': 'Printer',
-    '18:B4:30:02:72:DA': 'Nest',
-    '60:C5:47:05:08:8E': 'Macbook Air',
-    '30:85:A9:DC:DC:B7': 'Nexus 7',
-    'E8:99:C4:83:76:AB': 'Ariel\'s Phone',
-    'B0:34:95:0E:21:31': 'iPad',
-    'A0:0B:BA:8F:99:AD': 'Alexander\'s Phone',
-    '8C:3A:E3:70:C7:A1': 'Wonk\'s phone',
-    'B8:76:3F:20:68:7F': 'Alexander\'s laptop',
-    '5C:C5:D4:0E:8B:A7': 'Ariel\'s Chromebook',
-    'D0:E7:82:7B:44:68': 'Chromecast \'livingroom\'',
-    '6C:AD:F8:2B:42:F3': 'Chromecast Projector',
-    '00:26:37:8A:15:74': 'Nexus S',
-    '20:0C:C8:51:7D:09': 'Powerline #2',
-    'F8:1E:DF:E8:87:B5': 'MacBookPro wireless',
-    '34:15:9E:20:91:F8': 'MacBookPro wired',
-    '30:8C:FB:16:08:E8': 'Dropcam',
-    # Other devices
-    '00:EE:BD:59:40:7C': 'Liang HuiChing\'s phone',
-  }
+def deviceNames(file):
+  with open(file, mode='r') as infile:
+    reader = csv.reader(infile)
+    names = {rows[0].strip():rows[1].strip() for rows in reader
+              if len(rows) > 1 and not rows[0] == "#"}
   return names
 
-def parseHostInfo(nminfo, local_mac):
+def parseHostInfo(nminfo, local_mac, mac_file):
   nmapstats = dict()
   nmapstats['uphosts'] = nminfo['nmap']['scanstats']['uphosts']
   nmapstats['readtime'] = nminfo['nmap']['scanstats']['elapsed']
   nmapstats['up'] = list()
   nmapstats['details'] = list()
-  names = deviceNames()
+  names = deviceNames(mac_file)
   for ip in nminfo['scan'].keys():
     ipinfo = nminfo['scan'][ip]
     if 'addresses' in ipinfo:
@@ -97,6 +70,8 @@ def main():
                       help='Netmask of network to be scanned')
   parser.add_argument('--mac', nargs='?', default='localhost',
                       help='MAC address of local machine')
+  parser.add_argument('--macfile', nargs='?', default='/home/david/mac.csv',
+                      help='CSV file with MAC address, name pairs')
   parser.add_argument('--prefix', nargs='?', default='nmap',
                       help='Prefix for labels')
   parser.add_argument('--dummy', nargs='?', default=False, type=bool,
@@ -107,7 +82,7 @@ def main():
     nminfo = dummyStats()
   else:
     nminfo = scanHosts(args.netmask, '-sP')
-  nmapstats = parseHostInfo(nminfo, args.mac)
+  nmapstats = parseHostInfo(nminfo, args.mac, args.macfile)
   print outputPrometheusData(nmapstats, args.prefix + '_')
 
 
