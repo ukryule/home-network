@@ -1,4 +1,9 @@
 #!/usr/bin/python
+"""
+A script which sends GPIO signals to open my garage door. This depends on the
+correct GPIO setup, and also checks .prom file for status.
+"""
+
 
 import argparse
 import csv
@@ -33,12 +38,12 @@ def open_garage_door(direction='opening', pin=15):
     result = '%s not enabled' % direction
   return result
 
-def return_output(value):
+def json_output(value):
   """Simple function to return data in a standard JSON format."""
   return '{"is_open": "%s"}\n' % value
 
 def choose_action(direction, door_state):
-  """Decide what action to take and return suitable JSON response."""
+  """Decide what action to take and return suitable response."""
   output = 'unknown command %s' % direction
   if direction == 'status':
     output = 'true' if door_state=='1' else 'false'
@@ -63,11 +68,15 @@ def main():
   parser.add_argument('direction', metavar='open|close|status',
                       default='status',
                       help='Whether to open or close the garage')
+  parser.add_argument('--json', action='store_true',
+                      help='Output json format')
 
   args = parser.parse_args()
   data = read_file_to_dict(args.file)
   output = choose_action(args.direction, data['garage_door_open'])
-  print output  # return_output(output)
+  if args.json:
+    output = json_output(output)
+  print output
 
 
 if __name__ == '__main__':
