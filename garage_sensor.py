@@ -17,12 +17,12 @@ def write_to_file(filename, value):
   results['time'] = int(time.time())
 
   # Hardcoded values. The garage door is expected to be <42cm away from the
-  # sensor when open, while the roof of the car is expected to be <80cm
+  # sensor when open, while the roof of the car is expected to be <90cm
   # away. 
   if value < 42:
     # We don't know the status of the car in this scenario.
     results['door_open'] = 1
-  elif value < 80:
+  elif value < 90:
     results['car_in'] = 1
   else:
     results['car_in'] = 0
@@ -30,9 +30,6 @@ def write_to_file(filename, value):
     for key, val in results.items():
       if val >= 0:
         outfile.write('garage_' + key + ' ' + str(val) + '\n')
-        # Output without garage_ prefix for legacy data continuity.
-        if key in ('car_in', 'door_open'):
-          outfile.write(key + ' ' + str(val) + '\n')
 
 def main():
   """Main function to read sensor and update stats."""
