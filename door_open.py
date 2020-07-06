@@ -63,7 +63,8 @@ def main():
   """Main function which will open/close garage or return status."""
   parser = argparse.ArgumentParser(
     description='Pull data from GPIO and write a Prometheus file output')
-  parser.add_argument('--file', default='/home/pi/garage/garage.prom',
+  parser.add_argument('--file',
+                      default='/var/lib/prometheus/node-exporter/garage.prom',
                       nargs='?', help='File to read state from')
   parser.add_argument('direction', metavar='open|close|status',
                       default='status',

@@ -35,7 +35,8 @@ def main():
   """Main function to read sensor and update stats."""
   parser = argparse.ArgumentParser(
     description='Pull data from GPIO and write a Prometheus file output')
-  parser.add_argument('--file', default='garage.prom',
+  parser.add_argument('--file',
+                      default='/var/lib/prometheus/node-exporter/garage.prom',
                       nargs='?', help='File to write')
   parser.add_argument('--delay', nargs='?', default=10, type=int,
                       help='Delay in seconds between readings')
