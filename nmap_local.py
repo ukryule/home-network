@@ -43,7 +43,6 @@ def parse_host_info(nminfo, local_mac, mac_file):
   nmapstats['up'] = list()
   nmapstats['details'] = list()
   (names, groups) = device_names(mac_file)
-  print groups
   for ip in nminfo['scan'].keys():
     ipinfo = nminfo['scan'][ip]
     if 'addresses' in ipinfo:
