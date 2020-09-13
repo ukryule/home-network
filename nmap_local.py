@@ -26,10 +26,13 @@ def device_names(filename):
   """Read csv of mac address, machine name pairs into dict."""
   with open(filename, mode='r') as infile:
     reader = csv.reader(infile)
-    names  = {rows[0].strip():rows[1].strip() for rows in reader
-              if len(rows) > 1 and not rows[0] == "#"}
-    groups = {rows[0].strip():rows[2].strip() for rows in reader
-              if len(rows) > 2 and not rows[0] == "#"}
+    names = {}
+    groups = {}
+    for rows in reader:
+      if len(rows) > 1 and not rows[0] == "#":
+        names[rows[0].strip()] = rows[1].strip()
+      if len(rows) > 2 and not rows[0] == "#":
+        groups[rows[0].strip()] = rows[2].strip()
   return (names, groups)
 
 def parse_host_info(nminfo, local_mac, mac_file):
@@ -40,6 +43,7 @@ def parse_host_info(nminfo, local_mac, mac_file):
   nmapstats['up'] = list()
   nmapstats['details'] = list()
   (names, groups) = device_names(mac_file)
+  print groups
   for ip in nminfo['scan'].keys():
     ipinfo = nminfo['scan'][ip]
     if 'addresses' in ipinfo:
@@ -57,7 +61,7 @@ def parse_host_info(nminfo, local_mac, mac_file):
         name = 'UNKNOWN'
       if mac in groups:
         group = groups[mac]
-      else
+      else:
         group = 'unknown'
       isup = int('status' in ipinfo and 'state' in ipinfo['status']
                  and ipinfo['status']['state'] == 'up')
