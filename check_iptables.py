@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """
 A script for use with Prometheus. It calls iptables and parses the data,
 outputing it in a format like this:
@@ -15,10 +15,10 @@ import subprocess
 def output_prometheus_data(stats, prefix):
   """Convert the given dict into data formatted for prometheus to read."""
   output = ''
-  for key, value in stats.iteritems():
-    if type(value) is list:
+  for key, value in list(stats.items()):
+    if isinstance(value, list):
       for item in value:
-        labels = [lk+'="'+lv+'"' for lk, lv in item.iteritems()
+        labels = [lk+'="'+lv+'"' for lk, lv in list(item.items())
                   if not lk == 'value']
         output += prefix + key + '{' + ','.join(labels) + '} '
         output += str(item['value']) + '\n'
@@ -52,7 +52,7 @@ def main():
   args = parser.parse_args()
 
   portstats = get_iptables_data()
-  print output_prometheus_data(portstats, args.prefix + '_')
+  print(output_prometheus_data(portstats, args.prefix + '_'))
 
 if __name__ == '__main__':
   main()

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """
 A script for use with Prometheus. It requests a url and then updates stats
 based on this. It reads/writes stats in this format:
@@ -10,15 +10,15 @@ This format is designed to be read by prometheus node_exporter.
 
 import argparse
 import csv
-import httplib
 import socket
 import time
+import http.client
 
 def request_url(domain, path, timeout):
   """Get the given url and return basic stats."""
   start_time = time.time()
   try:
-    conn = httplib.HTTPConnection(domain, timeout=timeout)
+    conn = http.client.HTTPConnection(domain, timeout=timeout)
     conn.request('GET', path)
     res = conn.getresponse()
     status, data, success = res.status, res.read(), 1
@@ -40,7 +40,7 @@ def read_file_to_dict(filename, delimiter=' '):
 def write_dict_to_file(filename, data, delimiter=' '):
   """Write dict back into the given file."""
   with open(filename, 'w') as outfile:
-    for key, value in data.iteritems():
+    for key, value in list(data.items()):
       outfile.write(key + delimiter + str(value) + '\n')
 
 def increment_value(data, key, value, type_func):
