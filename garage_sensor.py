@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """
 A script which reads from a HC-SR04 distance sensor via RaspberryPi, and
 then outputs data in a format which can be read by Prometheus reporting the
@@ -18,7 +18,7 @@ def write_to_file(filename, value):
 
   # Hardcoded values. The garage door is expected to be <42cm away from the
   # sensor when open, while the roof of the car is expected to be <90cm
-  # away. 
+  # away.
   if value < 42:
     # We don't know the status of the car in this scenario.
     results['door_open'] = 1
@@ -26,7 +26,7 @@ def write_to_file(filename, value):
     results['car_in'] = 1
   else:
     results['car_in'] = 0
-  with open(filename,'w') as outfile:
+  with open(filename, 'w') as outfile:
     for key, val in results.items():
       if val >= 0:
         outfile.write('garage_' + key + ' ' + str(val) + '\n')
@@ -34,7 +34,7 @@ def write_to_file(filename, value):
 def main():
   """Main function to read sensor and update stats."""
   parser = argparse.ArgumentParser(
-    description='Pull data from GPIO and write a Prometheus file output')
+      description='Pull data from GPIO and write a Prometheus file output')
   parser.add_argument('--file',
                       default='/var/lib/prometheus/node-exporter/garage.prom',
                       nargs='?', help='File to write')

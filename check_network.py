@@ -33,8 +33,8 @@ def read_file_to_dict(filename, delimiter=' '):
   data = dict()
   with open(filename, mode='r') as infile:
     reader = csv.reader(infile, delimiter=delimiter)
-    data = {rows[0].strip():rows[1].strip() for rows in reader
-              if len(rows) > 1 and not rows[0] == "#"}
+    data = {rows[0].strip(): rows[1].strip() for rows in reader
+            if len(rows) > 1 and not rows[0] == "#"}
   return data
 
 def write_dict_to_file(filename, data, delimiter=' '):
