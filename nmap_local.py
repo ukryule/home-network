@@ -19,9 +19,14 @@ def dummy_stats():
 
 def scan_hosts(hosts, args):
   """Run nmap portscanner and return all the hosts found."""
-  nm = nmap.PortScanner()
-  return nm.scan(hosts=hosts, arguments=args)
-
+  try:
+    nm = nmap.PortScanner()
+    output = nm.scan(hosts=hosts, arguments=args)
+  except nmap.PortScannerError as e:
+    output = ''
+    print("An error occurred: %s" % e)     
+  return output
+  
 def device_names(filename):
   """Read csv of mac address, machine name pairs into dict."""
   with open(filename, mode="r") as infile:
@@ -29,9 +34,9 @@ def device_names(filename):
     names = {}
     groups = {}
     for rows in reader:
-      if len(rows) > 1 and not rows[0] == "#":
+      if len(rows) > 1 and not rows[0].strip().startswith("#"):
         names[rows[0].strip()] = rows[1].strip()
-      if len(rows) > 2 and not rows[0] == "#":
+      if len(rows) > 2 and not rows[0].strip().startswith("#"):
         groups[rows[0].strip()] = rows[2].strip()
   return (names, groups)
 
@@ -104,6 +109,9 @@ def main():
                       help="CSV file with MAC address, name pairs")
   parser.add_argument("--prefix", nargs="?", default="nmap",
                       help="Prefix for labels")
+  parser.add_argument('--file',
+                      default='/var/lib/prometheus/node-exporter/nmap.prom',
+                      nargs='?', help='File to write')
   parser.add_argument("--dummy", nargs="?", default=False, type=bool,
                       help="Whether to use dummy data")
   args = parser.parse_args()
@@ -111,10 +119,13 @@ def main():
   if args.dummy:
     nminfo = dummy_stats()
   else:
-    nminfo = scan_hosts(args.netmask, "-sP")
+    nminfo = scan_hosts(args.netmask, "-sn")
   nmapstats = parse_host_info(nminfo, args.mac, args.macfile)
   output = output_prometheus_data(nmapstats, args.prefix + "_")
-  print(output)
+
+  if output:
+    with open(args.file, 'w') as outfile:
+      outfile.write(output)
 
 
 if __name__ == "__main__":
