@@ -42,6 +42,7 @@ def device_names(filename):
 
 def parse_host_info(nminfo, local_mac, mac_file):
   """Convert the nmap info into prometheus structure with machine names."""
+  seen = dict()
   nmapstats = dict()
   nmapstats["uphosts"] = nminfo["nmap"]["scanstats"]["uphosts"]
   nmapstats["readtime"] = nminfo["nmap"]["scanstats"]["elapsed"]
@@ -60,7 +61,7 @@ def parse_host_info(nminfo, local_mac, mac_file):
         mac = ""
       if mac in names:
         name = names[mac]
-        del names[mac]
+        # del names[mac]
       else:
         name = "UNKNOWN"
       if mac in groups:
@@ -70,17 +71,19 @@ def parse_host_info(nminfo, local_mac, mac_file):
       isup = int("status" in ipinfo and "state" in ipinfo["status"]
                  and ipinfo["status"]["state"] == "up")
       if mac:
+        seen[mac] = 1
         nmapstats["up"].append({"mac": mac, "name": name,
                                 "group": group, "value": isup})
       nmapstats["details"].append(
           {"mac": mac, "name": name, "group": group, "ip": ip, "value": isup})
   for mac, name in names.items():
-    if mac in groups:
-      group = groups[mac]
-    else:
-      group = "unknown"
-    nmapstats["up"].append({"mac": mac, "name": name,
-                            "group": group, "value": 0})
+    if not mac in seen:
+      if mac in groups:
+        group = groups[mac]
+      else:
+        group = "unknown"
+        nmapstats["up"].append({"mac": mac, "name": name,
+                                "group": group, "value": 0})
   return nmapstats
 
 def output_prometheus_data(stats, prefix):
@@ -105,7 +108,8 @@ def main():
                       help="Netmask of network to be scanned")
   parser.add_argument("--mac", nargs="?", default="localhost",
                       help="MAC address of local machine")
-  parser.add_argument("--macfile", nargs="?", default="/home/david/mac.csv",
+  parser.add_argument("--macfile", nargs="?",
+                      default="/home/david/src/home-setup/config/mac.csv",
                       help="CSV file with MAC address, name pairs")
   parser.add_argument("--prefix", nargs="?", default="nmap",
                       help="Prefix for labels")
