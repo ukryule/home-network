@@ -27,27 +27,29 @@ def scan_hosts(hosts, args):
     print("An error occurred: %s" % e)     
   return output
   
-def device_names(filename):
+def device_names(filename, location):
   """Read csv of mac address, machine name pairs into dict."""
   with open(filename, mode="r") as infile:
     reader = csv.reader(infile)
     names = {}
     groups = {}
     for rows in reader:
-      if len(rows) > 1 and not rows[0].strip().startswith("#"):
-        names[rows[0].strip()] = rows[1].strip()
-      if len(rows) > 2 and not rows[0].strip().startswith("#"):
-        groups[rows[0].strip()] = rows[2].strip()
+      loc = rows[3].strip() if len(rows) > 3 else location
+      if loc == location and not rows[0].strip().startswith("#"):
+        if len(rows) > 1:
+          names[rows[0].strip()] = rows[1].strip()
+        if len(rows) > 2:
+          groups[rows[0].strip()] = rows[2].strip()
   return (names, groups)
 
-def parse_host_info(nminfo, local_mac, mac_file):
+def parse_host_info(nminfo, local_mac, mac_file, location):
   """Convert the nmap info into prometheus structure with machine names."""
   nmapstats = dict()
   nmapstats["uphosts"] = nminfo["nmap"]["scanstats"]["uphosts"]
   nmapstats["readtime"] = nminfo["nmap"]["scanstats"]["elapsed"]
   nmapstats["up"] = list()
   nmapstats["details"] = list()
-  (names, groups) = device_names(mac_file)
+  (names, groups) = device_names(mac_file, location)
   for ip in list(nminfo["scan"].keys()):
     ipinfo = nminfo["scan"][ip]
     if "addresses" in ipinfo:
@@ -109,6 +111,8 @@ def main():
                       help="CSV file with MAC address, name pairs")
   parser.add_argument("--prefix", nargs="?", default="nmap",
                       help="Prefix for labels")
+  parser.add_argument("--location", nargs="?", default="",
+                      help="Location used in mac file")
   parser.add_argument('--file',
                       default='/var/lib/prometheus/node-exporter/nmap.prom',
                       nargs='?', help='File to write')
@@ -120,7 +124,7 @@ def main():
     nminfo = dummy_stats()
   else:
     nminfo = scan_hosts(args.netmask, "-sn")
-  nmapstats = parse_host_info(nminfo, args.mac, args.macfile)
+  nmapstats = parse_host_info(nminfo, args.mac, args.macfile, args.location)
   output = output_prometheus_data(nmapstats, args.prefix + "_")
 
   if output:
