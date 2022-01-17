@@ -84,8 +84,8 @@ def parse_host_info(nminfo, local_mac, mac_file, location):
         group = groups[mac]
       else:
         group = "unknown"
-        nmapstats["up"].append({"mac": mac, "name": name,
-                                "group": group, "value": 0})
+      nmapstats["up"].append({"mac": mac, "name": name,
+                              "group": group, "value": 0})
   return nmapstats
 
 def output_prometheus_data(stats, prefix):
@@ -128,12 +128,13 @@ def main():
     nminfo = dummy_stats()
   else:
     nminfo = scan_hosts(args.netmask, "-sn")
-  nmapstats = parse_host_info(nminfo, args.mac, args.macfile, args.location)
-  output = output_prometheus_data(nmapstats, args.prefix + "_")
+  if nminfo:
+    nmapstats = parse_host_info(nminfo, args.mac, args.macfile, args.location)
+    output = output_prometheus_data(nmapstats, args.prefix + "_")
 
-  if output:
-    with open(args.file, 'w') as outfile:
-      outfile.write(output)
+    if output:
+      with open(args.file, 'w') as outfile:
+        outfile.write(output)
 
 
 if __name__ == "__main__":
